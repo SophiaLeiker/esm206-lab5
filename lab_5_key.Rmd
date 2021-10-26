@@ -74,4 +74,55 @@ trees_t <- t.test(oak_trees, pine_trees)
 
 The p-value of `r trees_t$p.value` means that there is `r ((trees_t$p.value) * 100)` % chance of finding sample means *at least as different as those I found* by random chance if they were drawn from populations with the same mean height. 
 
+Using the 'mpg' dataset to compare city gas milage for SUVs and compact cars.
+#to check the different groups that are within a column --> unique(mpg$class)
 
+```{r}
+# Create a subset called compact_suv that only contains observations where the class is suc OR compact
+
+compact_suv <- mpg %>% 
+  filter(class %in% c("suv", "compact"))
+
+#to check that this worked, run in the console "unique(compact_suv$class)" to check that there are only two unique values being spit out 
+```
+
+```{r}
+ggplot(data = compact_suv, aes(x= cty)) +
+  geom_histogram(bins = 12) + 
+  facet_wrap(~class)
+
+ggplot(data = compact_suv, aes(sample = cty)) +
+  geom_qq() + 
+  facet_wrap(~class)
+
+#If the QQ plot is a nice linear line, you can say that the observations are fairly normally distributed 
+```
+
+```{r}
+car_stats <- compact_suv %>% 
+  group_by(class) %>% 
+  summarize(mean_city = mean(cty), #mean city is the column name, then the second argument is telling the summarize table what summary state to calculate
+            sd_city = round(sd(cty), 1) , #you can round using this function
+            sample_size = n())
+
+car_stats
+
+
+```
+
+```{r}
+compact_sample <- compact_suv %>% 
+  filter(class == "compact") %>% 
+  pull(cty)
+
+suv_sample <- compact_suv %>% 
+  filter(class == "suv") %>% 
+  pull(cty)
+
+cars_t <- t.test(compact_sample, suv_sample)
+
+```
+
+Stats Speak: reject the null hypothesis of equal mean city gas milage
+
+Mean gas milage for compact cars and suvs differs significantly (t(`r cars_t$parameter`) = `r cars_t$statistic`, P < 0.001, $\alpha$ = 0.05).
